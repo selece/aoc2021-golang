@@ -14,18 +14,19 @@ const (
 	DAY01_SELECTOR = "day01"
 )
 
-func Run(ctx context.Context, log *logrus.Logger, part int, input string) error {
+func Run(ctx context.Context, part int, input string) error {
 	switch part {
 	case 1:
-		return part1(ctx, log, input)
+		return part1(ctx, input)
 	case 2:
-		return part2(ctx, log, input)
+		return part2(ctx, input)
 	default:
 		return fmt.Errorf("unrecognized mode: %v", part)
 	}
 }
 
-func part1(ctx context.Context, log *logrus.Logger, input string) error {
+func part1(ctx context.Context, input string) error {
+	log := logrus.WithContext(ctx)
 	scan, closer, err := aocutil.BuildFileScanner(input)
 	if err != nil {
 		return fmt.Errorf("failed to build file scanner: %w", err)
@@ -62,55 +63,28 @@ func part1(ctx context.Context, log *logrus.Logger, input string) error {
 	return nil
 }
 
-type sw struct {
-	values []int
-	label  string
-}
+func part2(ctx context.Context, input string) error {
+	log := logrus.WithContext(ctx)
 
-func makeSW(label string) *sw {
-	return &sw{
-		values: make([]int, 0),
-		label:  label,
-	}
-}
-
-func (s *sw) isFull() bool {
-	return len(s.values) == 3
-}
-
-func (s *sw) append(next int) error {
-	if s.isFull() {
-		return fmt.Errorf("cannot append; sliding window is full")
-	}
-
-	s.values = append(s.values, next)
-	return nil
-}
-
-func part2(ctx context.Context, log *logrus.Logger, input string) error {
 	scan, closer, err := aocutil.BuildFileScanner(input)
 	if err != nil {
 		return fmt.Errorf("failed to build file scanner: %w", err)
 	}
 	defer closer()
 
-	windows := make([]sw, 0)
-	for scan.Scan() {
-		latest := windows[len(windows)-1]
-		if latest.isFull() {
-			windows = append(windows, *makeSW(strconv.Itoa(len(windows))))
-		}
+	wm := MakeWindowManager()
 
+	for scan.Scan() {
 		value, err := strconv.Atoi(scan.Text())
 		if err != nil {
 			log.Fatalf("failed to parse to int: %s", scan.Text())
 		}
-		latest.append(value)
+
+		wm.AddValue(value)
 	}
 
-	for _, window := range windows {
-		log.Infof("%d: %v", window.label, window.values)
-	}
+	// print
+	log.Info(wm.Print())
 
 	return nil
 }

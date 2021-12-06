@@ -5,11 +5,9 @@ import (
 	"context"
 	"fmt"
 	"os"
-
-	"github.com/sirupsen/logrus"
 )
 
-type ProblemRunner = func(context.Context, *logrus.Logger, int, string) error
+type ProblemRunner = func(context.Context, int, string) error
 
 func BuildSelector(day int) string {
 	return fmt.Sprintf("day%02d", day)
