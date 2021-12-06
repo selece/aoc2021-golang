@@ -34,14 +34,26 @@ func (s *SlidingWindow) add(next int) (*SlidingWindow, error) {
 	return s, nil
 }
 
+func (s *SlidingWindow) sum() int {
+	sum := 0
+	for _, v := range s.values {
+		sum += v
+	}
+
+	return sum
+}
+
 type WindowManager struct {
 	windows []SlidingWindow
 }
 
 func MakeWindowManager() *WindowManager {
-	return &WindowManager{
+	wm := &WindowManager{
 		windows: []SlidingWindow{},
 	}
+
+	wm.addWindow()
+	return wm
 }
 
 func (m *WindowManager) addAt(index int, value int) error {
@@ -62,67 +74,39 @@ func (m *WindowManager) addAt(index int, value int) error {
 	return nil
 }
 
-func (m *WindowManager) addRecurse(index int, value int) error {
-	if index >= len(m.windows) || index < 0 {
-		return fmt.Errorf("index out of range: %d", index)
+func (m *WindowManager) addWindow() {
+	label := strconv.Itoa(len(m.windows) + 1)
+	m.windows = append(m.windows, *makeSlidingWindow(label))
+}
+
+func (m *WindowManager) AddValue(value int, index int) error {
+	if len(m.windows) < index+WINDOW_CAPACITY {
+		for i := 0; i <= index+WINDOW_CAPACITY-len(m.windows); i++ {
+			m.addWindow()
+		}
 	}
 
-	for i, w := range m.windows {
-		if i >= index {
-			break
-		}
-
-		if !w.isFull() {
-			m.addAt(i, value)
-		}
+	for i := index; i <= index+WINDOW_CAPACITY; i++ {
+		m.addAt(i, value)
 	}
 
 	return nil
 }
 
-func (m *WindowManager) addWindow(label string) {
-	m.windows = append(m.windows, *makeSlidingWindow(label))
-}
-
-func (m *WindowManager) getLatestWindow() (int, *SlidingWindow) {
-	latestIndex := len(m.windows) - 1
-
-	if latestIndex == -1 {
-		return -1, nil
+func (m *WindowManager) TrimInvalidWindows() error {
+	trim := []SlidingWindow{}
+	for _, w := range m.windows {
+		if w.isFull() {
+			trim = append(trim, w)
+		}
 	}
 
-	latestWindow := m.windows[latestIndex]
-
-	return latestIndex, &latestWindow
-}
-
-func (m *WindowManager) AddValue(value int) error {
-	if len(m.windows) == 0 {
-		m.windows = append(m.windows, *makeSlidingWindow("0"))
-	}
-
-	latestIndex, latestWindow := m.getLatestWindow()
-
-	if latestWindow.isFull() {
-		m.addWindow(strconv.Itoa(latestIndex + 1))
-		latestIndex, _ = m.getLatestWindow()
-	}
-
-	err := m.addAt(latestIndex, value)
-	if err != nil {
-		return fmt.Errorf("error adding to window: %w", err)
-	}
-
-	err = m.addRecurse(latestIndex, value)
-	if err != nil {
-		return fmt.Errorf("error recurse adding to windows: %w", err)
-	}
-
+	m.windows = trim
 	return nil
 }
 
 func (m *WindowManager) Print() string {
-	res := ""
+	res := "-- WindowManager output --\n"
 	for _, w := range m.windows {
 		res += fmt.Sprintf("%s: %v\n", w.label, w.values)
 	}

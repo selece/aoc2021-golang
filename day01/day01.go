@@ -73,6 +73,7 @@ func part2(ctx context.Context, input string) error {
 	defer closer()
 
 	wm := MakeWindowManager()
+	index := 0
 
 	for scan.Scan() {
 		value, err := strconv.Atoi(scan.Text())
@@ -80,11 +81,24 @@ func part2(ctx context.Context, input string) error {
 			log.Fatalf("failed to parse to int: %s", scan.Text())
 		}
 
-		wm.AddValue(value)
+		wm.AddValue(value, index)
+		index += 1
+	}
+
+	wm.TrimInvalidWindows()
+
+	prev := -1
+	count := 0
+	for _, w := range wm.windows {
+		current := w.sum()
+		if current > prev && prev != -1 {
+			count += 1
+		}
+		prev = current
 	}
 
 	// print
-	log.Info(wm.Print())
+	log.Info(count)
 
 	return nil
 }
