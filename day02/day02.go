@@ -38,12 +38,11 @@ func part1(ctx context.Context, input string) error {
 	defer closer()
 
 	for scan.Scan() {
-		m, err := MakeMovement(scan.Text())
+		v, err := StringToVector(scan.Text())
 		if err != nil {
 			return fmt.Errorf("failed to parse to movement: %v", scan.Text())
 		}
 
-		v := m.ToVector()
 		log.Debugf("move with vec: %v", v)
 		pos = pos.Add(*v)
 	}
