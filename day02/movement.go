@@ -23,11 +23,11 @@ var (
 		"backward": Backward,
 	}
 
-	DirectionModifierMap = map[Direction]int{
-		Up:       1,
-		Down:     -1,
-		Forward:  1,
-		Backward: -1,
+	DirectionToVectorMap = map[Direction]*Vector{
+		Up:       &Vector{0, -1},
+		Down:     &Vector{0, 1},
+		Forward:  &Vector{1, 0},
+		Backward: &Vector{-1, 0},
 	}
 )
 
@@ -36,15 +36,15 @@ type Movement struct {
 	dist int
 }
 
-type Position struct {
-	h int
-	v int
+type Vector struct {
+	x int
+	y int
 }
 
 var (
-	ErrMovementNoRegexpMatch = errors.New("no match for movement regexp; check formatting")
-	ErrFailedToMap           = errors.New("no entry on movement map")
-	ErrFailedAtoi            = errors.New("failed to parse string to int")
+	ErrNoRegexpMatch = errors.New("no match for movement regexp; check formatting")
+	ErrFailedToMap   = errors.New("no entry on movement map")
+	ErrFailedAtoi    = errors.New("failed to parse string to int")
 )
 
 func MakeMovement(input string) (*Movement, error) {
@@ -52,7 +52,7 @@ func MakeMovement(input string) (*Movement, error) {
 	results := r.FindStringSubmatch(input)
 
 	if results == nil {
-		return nil, ErrMovementNoRegexpMatch
+		return nil, ErrNoRegexpMatch
 	}
 
 	if _, ok := DirectionMap[results[1]]; !ok {
@@ -67,4 +67,30 @@ func MakeMovement(input string) (*Movement, error) {
 	}
 
 	return &Movement{dir, dist}, nil
+}
+
+func (m *Movement) ToVector() *Vector {
+	v := DirectionToVectorMap[m.dir]
+	switch m.dir {
+	case Up:
+	case Down:
+		v.y = v.y * m.dist
+	case Forward:
+	case Backward:
+		v.x = v.x * m.dist
+	}
+
+	return v
+}
+
+func (v *Vector) Add(v2 Vector) *Vector {
+	return &Vector{
+		x: v.x + v2.x,
+		y: v.y + v2.y,
+	}
+}
+
+func (v *Vector) Move(m Movement) *Vector {
+	v2 := m.ToVector()
+	return v.Add(*v2)
 }
