@@ -20,16 +20,16 @@ var (
 func Run(ctx context.Context, part int, input string) error {
 	switch part {
 	case 1:
-		return part1(ctx, input)
-
-	default:
-		return ErrRunUnrecognizedPart
+	case 2:
+		return solve(ctx, input, part)
 	}
+	return ErrRunUnrecognizedPart
 }
 
-func part1(ctx context.Context, input string) error {
+func solve(ctx context.Context, input string, part int) error {
 	log := logrus.WithContext(ctx)
-	pos := &Vector{}
+	pos1 := &Vector{}
+	pos2 := &AimVector{}
 
 	scan, closer, err := aocutil.BuildFileScanner(input)
 	if err != nil {
@@ -38,15 +38,33 @@ func part1(ctx context.Context, input string) error {
 	defer closer()
 
 	for scan.Scan() {
-		v, err := StringToVector(scan.Text())
-		if err != nil {
-			return fmt.Errorf("failed to parse to movement: %v", scan.Text())
+		if part == 1 {
+			v, err := StringToVector(scan.Text())
+			if err != nil {
+				return fmt.Errorf("failed to parse to vector: %v", scan.Text())
+			}
+
+			log.Debugf("move with vec: %v", v)
+			pos1 = pos1.Move(*v)
 		}
 
-		log.Debugf("move with vec: %v", v)
-		pos = pos.Add(*v)
+		if part == 2 {
+			v, err := StringToAimVector(scan.Text())
+			if err != nil {
+				return fmt.Errorf("failwed to parse to aimvec: %v", scan.Text())
+			}
+
+			log.Debugf("move with aimvec: %v", v)
+			pos2 = pos2.Move(*v)
+		}
 	}
 
-	log.Infof("final position: %v", pos)
+	if part == 1 {
+		log.Infof("final position: %v", pos1)
+	}
+
+	if part == 2 {
+		log.Infof("final position: %v", pos2)
+	}
 	return nil
 }
