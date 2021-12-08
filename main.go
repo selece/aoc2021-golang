@@ -9,6 +9,7 @@ import (
 	"github.com/selece/aoc2021-golang/aocutil"
 	"github.com/selece/aoc2021-golang/day01"
 	"github.com/selece/aoc2021-golang/day02"
+	"github.com/selece/aoc2021-golang/day03"
 
 	"github.com/sirupsen/logrus"
 )
@@ -61,6 +62,7 @@ func main() {
 	problemsMap := make(map[string]aocutil.ProblemRunner)
 	problemsMap[day01.DAY01_SELECTOR] = day01.Run
 	problemsMap[day02.DAY02_SELECTOR] = day02.Run
+	problemsMap[day03.DAY03_SELECTOR] = day03.Run
 
 	// nab the args, minus the program name
 	args := os.Args[1:]
