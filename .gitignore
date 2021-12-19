@@ -16,3 +16,6 @@
 
 # compiled
 aoc2021-golang
+
+# session secret
+.SESSION
